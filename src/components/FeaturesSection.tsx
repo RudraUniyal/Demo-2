@@ -73,13 +73,13 @@ const features = [
 ];
 
 const categoryColors = {
-  "Technology": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  "Reporting": "bg-green-500/10 text-green-400 border-green-500/20",
-  "Intelligence": "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  "Visualization": "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  "Security": "bg-red-500/10 text-red-400 border-red-500/20",
-  "Communication": "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  "Analytics": "bg-pink-500/10 text-pink-400 border-pink-500/20"
+  "Technology": "bg-primary/10 text-primary border-primary/20",
+  "Reporting": "bg-accent/10 text-accent border-accent/20",
+  "Intelligence": "bg-secondary/10 text-secondary-foreground border-secondary/20",
+  "Visualization": "bg-primary/20 text-primary border-primary/30",
+  "Security": "bg-destructive/10 text-destructive border-destructive/20",
+  "Communication": "bg-muted/10 text-muted-foreground border-muted/20",
+  "Analytics": "bg-accent/20 text-accent border-accent/30"
 };
 
 export function FeaturesSection() {
