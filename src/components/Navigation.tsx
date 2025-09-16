@@ -1,8 +1,21 @@
 import { Button } from "@/components/ui/button";
-import { Waves, MapPin, Shield, Bell, Users, BarChart3, Settings } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Waves, MapPin, Shield, Bell, Users, BarChart3, Settings, User, MessageCircle, AlertTriangle } from "lucide-react";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { LanguageSelector } from "@/components/LanguageSelector";
+import { useLocalization } from "@/contexts/LocalizationContext";
 
 export function Navigation() {
+  const { t } = useLocalization();
+  const [isLoggedIn, setIsLoggedIn] = useState(true); // For demo purposes, we'll assume user is logged in
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    navigate("/");
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-6 py-4">
@@ -19,28 +32,55 @@ export function Navigation() {
           
           <div className="hidden md:flex items-center space-x-6">
             <NavLink to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Home
+              {t("navigation.home")}
             </NavLink>
             <NavLink to="/report" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Report
+              {t("navigation.report")}
             </NavLink>
             <NavLink to="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Dashboard
+              {t("navigation.dashboard")}
             </NavLink>
             <NavLink to="/alerts" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              Alerts
+              {t("navigation.alerts")}
+            </NavLink>
+            <NavLink to="/forum" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <MessageCircle className="h-4 w-4 inline mr-1" />
+              {t("navigation.forum")}
+            </NavLink>
+            <NavLink to="/emergency" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+              <AlertTriangle className="h-4 w-4 inline mr-1" />
+              {t("navigation.emergency")}
             </NavLink>
           </div>
           
           <div className="flex items-center space-x-3">
-            <Button variant="ghost" size="sm">
-              <Bell className="h-4 w-4" />
-            </Button>
-            <Button variant="glass" size="sm">
-              Sign In
-            </Button>
+            <LanguageSelector />
+            <NotificationCenter />
+            
+            {isLoggedIn ? (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
+                  <User className="h-4 w-4" />
+                  {t("navigation.profile")}
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  {t("navigation.logout")}
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+                  {t("navigation.signin")}
+                </Button>
+                <Button variant="hero" size="sm" onClick={() => navigate("/signup")}>
+                  {t("navigation.signup")}
+                </Button>
+              </>
+            )}
+            
             <Button variant="hero" size="sm">
-              Report Hazard
+              <MapPin className="h-4 w-4 mr-2" />
+              {t("hero.start_reporting")}
             </Button>
           </div>
         </div>

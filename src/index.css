@@ -156,3 +156,122 @@ All colors MUST be HSL.
     background: hsl(var(--primary));
   }
 }
+
+/* Mobile-specific enhancements */
+@layer utilities {
+  /* Enhanced mobile navigation */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-lg border-t border-border md:hidden;
+  }
+  
+  .mobile-nav-item {
+    @apply flex flex-col items-center justify-center p-2 text-xs transition-colors;
+  }
+  
+  .mobile-nav-item.active {
+    @apply text-primary;
+  }
+  
+  /* Mobile card adjustments */
+  .mobile-card {
+    @apply mx-4 mb-4;
+  }
+  
+  /* Mobile button enhancements */
+  .mobile-button {
+    @apply h-12 min-h-[48px];
+  }
+  
+  /* Mobile form adjustments */
+  .mobile-input {
+    @apply h-12 text-base;
+  }
+  
+  /* Safe area insets for mobile devices */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Mobile-specific animations */
+  .mobile-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    @apply px-4;
+  }
+  
+  .hero-section {
+    @apply py-16;
+  }
+  
+  .hero-title {
+    @apply text-4xl;
+  }
+  
+  .hero-subtitle {
+    @apply text-lg;
+  }
+  
+  .stats-grid {
+    @apply grid-cols-2 gap-4;
+  }
+  
+  .feature-card {
+    @apply p-4;
+  }
+  
+  .dashboard-grid {
+    @apply grid-cols-1 gap-4;
+  }
+  
+  .report-grid {
+    @apply grid-cols-1 gap-6;
+  }
+  
+  .forum-thread-card {
+    @apply p-4;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    @apply text-3xl;
+  }
+  
+  .hero-buttons {
+    @apply flex-col gap-3;
+  }
+  
+  .hero-button {
+    @apply w-full;
+  }
+  
+  .stats-grid {
+    @apply grid-cols-2 gap-3;
+  }
+  
+  .feature-grid {
+    @apply grid-cols-1;
+  }
+  
+  .feature-card {
+    @apply text-center;
+  }
+  
+  .feature-icon {
+    @apply mx-auto;
+  }
+}
