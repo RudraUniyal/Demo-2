@@ -73,6 +73,32 @@ const hazardTypes = {
   social: { icon: Eye, color: "bg-purple-500/10 text-purple-400 border-purple-500/20", label: "Social Signal" }
 };
 
+// Custom marker icons based on hazard type
+const getMarkerIcon = (type: string, severity: string) => {
+  const config = hazardTypes[type as keyof typeof hazardTypes] || hazardTypes.tsunami;
+  
+  // Create a custom div icon
+  const iconHtml = `
+    <div class="relative">
+      <div class="w-6 h-6 rounded-full ${config.color} flex items-center justify-center border-2 border-current">
+        ${type === 'tsunami' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-current"><path d="M3 2v6h6"></path><path d="M3 13a9 9 0 1 0 3-7.7L3 5"></path></svg>' : ''}
+        ${type === 'storm' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-current"><path d="M12 2v2"></path><path d="m12 20 4-4-4-4"></path><path d="m12 20-4-4 4-4"></path><path d="M4 12h16"></path></svg>' : ''}
+        ${type === 'waves' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-current"><path d="M2 12h4l3 9L12 3l3 18 3-9h4"></path></svg>' : ''}
+        ${type === 'flooding' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-current"><path d="M12 2v20"></path><path d="m4 12 4-4 4 4 4-4 4 4"></path></svg>' : ''}
+        ${type === 'social' ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-current"><path d="M12 2v20"></path><path d="m4 12 4-4 4 4 4-4 4 4"></path></svg>' : ''}
+      </div>
+      ${severity === 'critical' ? '<div class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping"></div>' : ''}
+    </div>
+  `;
+  
+  return L.divIcon({
+    html: iconHtml,
+    className: '',
+    iconSize: [24, 24],
+    iconAnchor: [12, 12]
+  });
+};
+
 export function HazardMap() {
   const [selectedHazard, setSelectedHazard] = useState<any>(null);
   const [mapView, setMapView] = useState("satellite");
@@ -117,14 +143,58 @@ export function HazardMap() {
           </CardHeader>
           <CardContent>
             <div className="h-96 rounded-lg overflow-hidden relative">
-              {/* Simple map placeholder - will be replaced with actual map */}
-              <div className="w-full h-full bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">Interactive Hazard Map</p>
-                  <p className="text-sm text-muted-foreground mt-2">Real-time visualization of coastal hazards</p>
-                </div>
-              </div>
+              <MapContainer 
+                center={[10.8505, 76.2711]} 
+                zoom={7} 
+                style={{ height: '100%', width: '100%' }}
+                className="z-0"
+              >
+                <TileLayer
+                  url={mapView === "satellite" 
+                    ? "https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
+                    : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  }
+                />
+                
+                {filteredHazards.map((hazard) => {
+                  const config = getHazardConfig(hazard.type);
+                  const Icon = config.icon;
+                  
+                  return (
+                    <Marker 
+                      key={hazard.id} 
+                      position={[hazard.coordinates.lat, hazard.coordinates.lng]}
+                      icon={getMarkerIcon(hazard.type, hazard.severity)}
+                      eventHandlers={{
+                        click: () => {
+                          setSelectedHazard(hazard);
+                        },
+                      }}
+                    >
+                      <Popup>
+                        <div className="p-2">
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="font-bold">{hazard.location}</h3>
+                            <Badge variant={hazard.severity === "critical" ? "destructive" : hazard.severity === "high" ? "default" : "secondary"}>
+                              {hazard.severity}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center mb-2">
+                            <div className={`p-1 rounded ${config.color} mr-2`}>
+                              <Icon className="h-4 w-4" />
+                            </div>
+                            <span className="text-sm">{config.label}</span>
+                          </div>
+                          <p className="text-sm">{hazard.description}</p>
+                          <div className="mt-2 text-xs text-muted-foreground">
+                            {hazard.timestamp} by {hazard.reporter}
+                          </div>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </MapContainer>
             </div>
             
             {/* Map Legend */}
