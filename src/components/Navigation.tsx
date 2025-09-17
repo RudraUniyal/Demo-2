@@ -1,18 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Waves, MapPin, Shield, Bell, Users, BarChart3, Settings, User, MessageCircle, AlertTriangle } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { LanguageSelector } from "@/components/LanguageSelector";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Navigation() {
   const { t } = useLocalization();
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // For demo purposes, we'll assume user is logged in
+  const { isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
+    logout();
     navigate("/");
   };
 
@@ -34,9 +34,11 @@ export function Navigation() {
             <NavLink to="/" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               {t("navigation.home")}
             </NavLink>
-            <NavLink to="/report" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-              {t("navigation.report")}
-            </NavLink>
+            {isAuthenticated && (
+              <NavLink to="/report" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                {t("navigation.report")}
+              </NavLink>
+            )}
             <NavLink to="/dashboard" className="text-sm text-muted-foreground hover:text-primary transition-colors">
               {t("navigation.dashboard")}
             </NavLink>
@@ -57,7 +59,7 @@ export function Navigation() {
             <LanguageSelector />
             <NotificationCenter />
             
-            {isLoggedIn ? (
+            {isAuthenticated ? (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/profile")}>
                   <User className="h-4 w-4" />
@@ -78,10 +80,12 @@ export function Navigation() {
               </>
             )}
             
-            <Button variant="hero" size="sm">
-              <MapPin className="h-4 w-4 mr-2" />
-              {t("hero.start_reporting")}
-            </Button>
+            {isAuthenticated && (
+              <Button variant="hero" size="sm" onClick={() => navigate("/report")}>
+                <MapPin className="h-4 w-4 mr-2" />
+                {t("hero.start_reporting")}
+              </Button>
+            )}
           </div>
         </div>
       </div>

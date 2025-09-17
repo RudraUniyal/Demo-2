@@ -3,9 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { MapPin, Zap, Users, Shield } from "lucide-react";
 import heroImage from "@/assets/hero-ocean.jpg";
 import { useLocalization } from "@/contexts/LocalizationContext";
+import { useNavigate } from "react-router-dom";
 
 export function HeroSection() {
   const { t } = useLocalization();
+  const navigate = useNavigate();
   
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-gradient-hero overflow-hidden">
@@ -44,11 +46,21 @@ export function HeroSection() {
         </p>
         
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-          <Button variant="hero" size="lg" className="min-w-[200px]">
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="min-w-[200px]"
+            onClick={() => navigate("/report")}
+          >
             <MapPin className="h-5 w-5 mr-2" />
             {t("hero.start_reporting")}
           </Button>
-          <Button variant="glass" size="lg" className="min-w-[200px]">
+          <Button 
+            variant="glass" 
+            size="lg" 
+            className="min-w-[200px]"
+            onClick={() => navigate("/dashboard")}
+          >
             <Shield className="h-5 w-5 mr-2" />
             {t("hero.view_dashboard")}
           </Button>

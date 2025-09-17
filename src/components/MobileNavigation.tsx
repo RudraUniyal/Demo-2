@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { 
   Home, 
   MapPin, 
@@ -11,9 +11,12 @@ import {
   Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function MobileNavigation() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [showReportModal, setShowReportModal] = useState(false);
 
   const navItems = [
@@ -52,28 +55,32 @@ export function MobileNavigation() {
             );
           })}
           
-          {/* User Profile */}
-          <NavLink
-            to="/profile"
-            className={`mobile-nav-item ${
-              location.pathname === "/profile" ? "text-primary" : "text-muted-foreground"
-            }`}
-          >
-            <User className="h-5 w-5" />
-            <span className="mt-1">Profile</span>
-          </NavLink>
+          {/* User Profile - only show if authenticated */}
+          {isAuthenticated && (
+            <NavLink
+              to="/profile"
+              className={`mobile-nav-item ${
+                location.pathname === "/profile" ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
+              <User className="h-5 w-5" />
+              <span className="mt-1">Profile</span>
+            </NavLink>
+          )}
         </div>
       </nav>
       
-      {/* Floating Report Button */}
-      <Button
-        variant="hero"
-        size="icon"
-        className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 md:hidden"
-        onClick={() => setShowReportModal(true)}
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* Floating Report Button - only show if authenticated */}
+      {isAuthenticated && (
+        <Button
+          variant="hero"
+          size="icon"
+          className="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-40 md:hidden"
+          onClick={() => setShowReportModal(true)}
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      )}
       
       {/* Report Modal */}
       {showReportModal && (
@@ -98,7 +105,7 @@ export function MobileNavigation() {
                 <button 
                   className="w-full flex items-center p-4 bg-muted/10 rounded-lg border border-border hover:bg-muted/20 transition-colors"
                   onClick={() => {
-                    window.location.href = "/report";
+                    navigate("/report");
                     setShowReportModal(false);
                   }}
                 >

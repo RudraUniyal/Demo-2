@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, AlertTriangle, Eye, Waves, Zap, Wind, Droplets } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 // Leaflet map components
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import type { MapContainerProps, TileLayerProps, MarkerProps } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
@@ -99,6 +100,17 @@ const getMarkerIcon = (type: string, severity: string) => {
   });
 };
 
+// Component to control the map center and zoom
+function MapController() {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.setView([10.8505, 76.2711], 7);
+  }, [map]);
+  
+  return null;
+}
+
 export function HazardMap() {
   const [selectedHazard, setSelectedHazard] = useState<any>(null);
   const [mapView, setMapView] = useState("satellite");
@@ -144,14 +156,16 @@ export function HazardMap() {
           <CardContent>
             <div className="h-96 rounded-lg overflow-hidden relative">
               <MapContainer 
-                center={[10.8505, 76.2711]} 
-                zoom={7} 
                 style={{ height: '100%', width: '100%' }}
                 className="z-0"
+                whenReady={() => {
+                  // Map is ready
+                }}
               >
+                <MapController />
                 <TileLayer
                   url={mapView === "satellite" 
-                    ? "https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}" 
+                    ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
                     : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                   }
                 />
@@ -164,7 +178,6 @@ export function HazardMap() {
                     <Marker 
                       key={hazard.id} 
                       position={[hazard.coordinates.lat, hazard.coordinates.lng]}
-                      icon={getMarkerIcon(hazard.type, hazard.severity)}
                       eventHandlers={{
                         click: () => {
                           setSelectedHazard(hazard);

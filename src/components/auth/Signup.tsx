@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Waves } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Signup() {
   const [name, setName] = useState("");
@@ -12,23 +13,71 @@ export function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match");
+      return;
+    }
+    
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
       return;
     }
     
     setIsLoading(true);
+    setError("");
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Split name into first and last name
+      const nameParts = name.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+      
+      // Connect to your backend API
+      const response = await fetch("http://localhost:5000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          username: email.split("@")[0], // Use email prefix as username
+          email, 
+          password,
+          firstName,
+          lastName
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Log in the user automatically after registration
+        login({
+          _id: data._id,
+          username: data.username,
+          email: data.email,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          role: data.role
+        }, data.token);
+        
+        // Redirect to dashboard
+        navigate("/dashboard");
+      } else {
+        setError(data.error || "Registration failed");
+      }
+    } catch (err) {
+      setError("Network error. Please try again.");
+      console.error("Registration error:", err);
+    } finally {
       setIsLoading(false);
-      navigate("/dashboard");
-    }, 1500);
+    }
   };
 
   return (
@@ -47,6 +96,11 @@ export function Signup() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
+                {error}
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
@@ -98,7 +152,6 @@ export function Signup() {
             <Button 
               type="submit" 
               className="w-full" 
-              variant="hero"
               disabled={isLoading}
             >
               {isLoading ? "Creating Account..." : "Sign Up"}

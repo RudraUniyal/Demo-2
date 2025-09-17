@@ -1,32 +1,73 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function UserProfile() {
-  const [name, setName] = useState("Alex Morgan");
-  const [email, setEmail] = useState("alex@example.com");
-  const [location, setLocation] = useState("Kochi, Kerala");
+  const { user, logout } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [location, setLocation] = useState("");
+  const [reports, setReports] = useState(0);
+  const [verifiedReports, setVerifiedReports] = useState(0);
+  const [memberSince, setMemberSince] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const navigate = useNavigate();
+
+  // Load user data when component mounts
+  useEffect(() => {
+    if (user) {
+      setName(`${user.firstName || ""} ${user.lastName || ""}`.trim() || user.username);
+      setEmail(user.email);
+      // Set default values for other fields
+      setLocation("Not specified");
+      setReports(24); // This would come from the backend in a real implementation
+      setVerifiedReports(18); // This would come from the backend in a real implementation
+      setMemberSince(new Date().toLocaleDateString());
+    }
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError("");
+    setSuccess("");
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // In a real implementation, you would update the user profile via the backend API
+      // For now, we'll just simulate a successful update
+      setTimeout(() => {
+        setIsLoading(false);
+        setSuccess("Profile updated successfully!");
+      }, 1000);
+    } catch (err) {
+      setError("Failed to update profile. Please try again.");
+      console.error("Profile update error:", err);
       setIsLoading(false);
-      alert("Profile updated successfully!");
-    }, 1000);
+    }
   };
 
   const handleLogout = () => {
+    logout();
     navigate("/");
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Please log in</h2>
+          <Button onClick={() => navigate("/login")}>Go to Login</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pt-20">
@@ -43,9 +84,9 @@ export function UserProfile() {
                 <div className="flex flex-col items-center">
                   <Avatar className="h-24 w-24 mb-4">
                     <AvatarImage src="https://github.com/shadcn.png" alt="User" />
-                    <AvatarFallback>AM</AvatarFallback>
+                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  <CardTitle>Alex Morgan</CardTitle>
+                  <CardTitle>{name || user.username}</CardTitle>
                   <CardDescription>Community Reporter</CardDescription>
                 </div>
               </CardHeader>
@@ -53,15 +94,15 @@ export function UserProfile() {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Reports</span>
-                    <span className="font-medium">24</span>
+                    <span className="font-medium">{reports}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Verified</span>
-                    <span className="font-medium text-green-400">18</span>
+                    <span className="font-medium text-green-400">{verifiedReports}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Member Since</span>
-                    <span className="font-medium">Jan 2023</span>
+                    <span className="font-medium">{memberSince}</span>
                   </div>
                 </div>
               </CardContent>
@@ -75,6 +116,16 @@ export function UserProfile() {
                 <CardDescription>Update your personal information</CardDescription>
               </CardHeader>
               <CardContent>
+                {error && (
+                  <div className="text-red-500 text-sm bg-red-50 p-2 rounded mb-4">
+                    {error}
+                  </div>
+                )}
+                {success && (
+                  <div className="text-green-500 text-sm bg-green-50 p-2 rounded mb-4">
+                    {success}
+                  </div>
+                )}
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -134,7 +185,6 @@ export function UserProfile() {
                     <Button 
                       type="submit" 
                       className="flex-1" 
-                      variant="hero"
                       disabled={isLoading}
                     >
                       {isLoading ? "Saving..." : "Save Changes"}

@@ -8,8 +8,32 @@ import {
   PieChart, 
   Calendar,
   Filter,
-  Download
+  Download,
+  TrendingUp,
+  AlertTriangle,
+  Waves,
+  Wind,
+  Droplets
 } from "lucide-react";
+
+// Import Recharts components for better visualization
+import {
+  BarChart,
+  Bar,
+  LineChart as RechartsLineChart,
+  Line,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from "recharts";
 
 // Mock data for visualization
 const hazardData = {
@@ -20,6 +44,26 @@ const hazardData = {
 };
 
 const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"];
+
+// Prepare data for Recharts
+const chartData = months.map((month, index) => ({
+  month,
+  tsunamis: hazardData.tsunamis[index],
+  stormSurges: hazardData.stormSurges[index],
+  highWaves: hazardData.highWaves[index],
+  flooding: hazardData.flooding[index],
+  total: hazardData.tsunamis[index] + hazardData.stormSurges[index] + hazardData.highWaves[index] + hazardData.flooding[index]
+}));
+
+// Prepare pie chart data
+const pieData = [
+  { name: "Tsunamis", value: hazardData.tsunamis.reduce((a, b) => a + b, 0) },
+  { name: "Storm Surges", value: hazardData.stormSurges.reduce((a, b) => a + b, 0) },
+  { name: "High Waves", value: hazardData.highWaves.reduce((a, b) => a + b, 0) },
+  { name: "Flooding", value: hazardData.flooding.reduce((a, b) => a + b, 0) }
+];
+
+const COLORS = ["#FF4444", "#FF8800", "#00AAFF", "#00FF88"];
 
 const hazardTypes = [
   { id: "all", name: "All Hazards" },
@@ -57,44 +101,168 @@ export function HazardTrends() {
     switch (chartType) {
       case "line":
         return (
-          <div className="h-64 flex items-end justify-between pt-4">
-            {data.map((value, index) => (
-              <div key={index} className="flex flex-col items-center flex-1 px-1">
-                <div 
-                  className="w-full bg-primary rounded-t hover:bg-accent transition-colors"
-                  style={{ height: `${(value / maxValue) * 90}%` }}
+          <div className="h-64 md:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsLineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    color: "hsl(var(--foreground))"
+                  }} 
                 />
-                <span className="text-xs text-muted-foreground mt-2">{months[index]}</span>
-              </div>
-            ))}
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="tsunamis" 
+                  stroke="#FF4444" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="stormSurges" 
+                  stroke="#FF8800" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="highWaves" 
+                  stroke="#00AAFF" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="flooding" 
+                  stroke="#00FF88" 
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                />
+              </RechartsLineChart>
+            </ResponsiveContainer>
           </div>
         );
       
       case "pie":
-        const total = data.reduce((sum, val) => sum + val, 0);
         return (
-          <div className="h-64 flex items-center justify-center">
-            <div className="relative w-48 h-48 rounded-full border-8 border-primary flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-2xl font-bold">{total}</div>
-                <div className="text-sm text-muted-foreground">Total Reports</div>
-              </div>
-            </div>
+          <div className="h-64 md:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <RechartsPieChart>
+                <Pie
+                  data={pieData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={true}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                >
+                  {pieData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    color: "hsl(var(--foreground))"
+                  }} 
+                />
+                <Legend />
+              </RechartsPieChart>
+            </ResponsiveContainer>
+          </div>
+        );
+      
+      case "area":
+        return (
+          <div className="h-64 md:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    color: "hsl(var(--foreground))"
+                  }} 
+                />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="tsunamis" 
+                  stackId="1" 
+                  stroke="#FF4444" 
+                  fill="#FF4444" 
+                  fillOpacity={0.6} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="stormSurges" 
+                  stackId="1" 
+                  stroke="#FF8800" 
+                  fill="#FF8800" 
+                  fillOpacity={0.6} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="highWaves" 
+                  stackId="1" 
+                  stroke="#00AAFF" 
+                  fill="#00AAFF" 
+                  fillOpacity={0.6} 
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="flooding" 
+                  stackId="1" 
+                  stroke="#00FF88" 
+                  fill="#00FF88" 
+                  fillOpacity={0.6} 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           </div>
         );
       
       default: // bar chart
         return (
-          <div className="h-64 flex items-end justify-between pt-4">
-            {data.map((value, index) => (
-              <div key={index} className="flex flex-col items-center flex-1 px-1">
-                <div 
-                  className="w-full bg-gradient-to-t from-primary to-accent rounded-t hover:from-accent hover:to-primary transition-all"
-                  style={{ height: `${(value / maxValue) * 90}%` }}
+          <div className="h-64 md:h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
+                <YAxis stroke="hsl(var(--muted-foreground))" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: "hsl(var(--background))", 
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "var(--radius)",
+                    color: "hsl(var(--foreground))"
+                  }} 
                 />
-                <span className="text-xs text-muted-foreground mt-2">{months[index]}</span>
-              </div>
-            ))}
+                <Legend />
+                <Bar dataKey="tsunamis" fill="#FF4444" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="stormSurges" fill="#FF8800" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="highWaves" fill="#00AAFF" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="flooding" fill="#00FF88" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         );
     }
@@ -127,6 +295,13 @@ export function HazardTrends() {
               onClick={() => setChartType("line")}
             >
               Line
+            </Button>
+            <Button 
+              variant={chartType === "area" ? "hero" : "outline"} 
+              size="sm"
+              onClick={() => setChartType("area")}
+            >
+              Area
             </Button>
             <Button 
               variant={chartType === "pie" ? "hero" : "outline"} 
@@ -175,19 +350,31 @@ export function HazardTrends() {
         
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="p-4 bg-primary/5 rounded-lg border border-primary/10">
-            <div className="text-2xl font-bold text-primary">127</div>
+            <div className="flex items-center mb-2">
+              <AlertTriangle className="h-5 w-5 text-destructive mr-2" />
+              <div className="text-2xl font-bold text-primary">127</div>
+            </div>
             <div className="text-sm text-muted-foreground">Total Reports</div>
           </div>
           <div className="p-4 bg-destructive/5 rounded-lg border border-destructive/10">
-            <div className="text-2xl font-bold text-destructive">24</div>
+            <div className="flex items-center mb-2">
+              <TrendingUp className="h-5 w-5 text-destructive mr-2" />
+              <div className="text-2xl font-bold text-destructive">24</div>
+            </div>
             <div className="text-sm text-muted-foreground">Critical Alerts</div>
           </div>
           <div className="p-4 bg-accent/5 rounded-lg border border-accent/10">
-            <div className="text-2xl font-bold text-accent">89</div>
+            <div className="flex items-center mb-2">
+              <Waves className="h-5 w-5 text-accent mr-2" />
+              <div className="text-2xl font-bold text-accent">89</div>
+            </div>
             <div className="text-sm text-muted-foreground">Verified Reports</div>
           </div>
           <div className="p-4 bg-secondary/5 rounded-lg border border-secondary/10">
-            <div className="text-2xl font-bold">42</div>
+            <div className="flex items-center mb-2">
+              <Wind className="h-5 w-5 text-secondary mr-2" />
+              <div className="text-2xl font-bold">42</div>
+            </div>
             <div className="text-sm text-muted-foreground">Active Users</div>
           </div>
         </div>
