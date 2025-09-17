@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Waves } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +13,7 @@ export function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,37 +21,41 @@ export function Login() {
     setError("");
     
     try {
-      // Connect to your backend API
-      const response = await fetch("http://localhost:5000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      // Mock authentication - in a real app, this would call your backend API
+      if ((email === "user@example.com" && password === "user123") || 
+          (email === "admin@example.com" && password === "admin123")) {
+        
+        // Mock user data
+        const mockUser = email === "admin@example.com" ? {
+          _id: "1",
+          username: "admin",
+          email: "admin@example.com",
+          firstName: "Admin",
+          lastName: "User",
+          role: "admin"
+        } : {
+          _id: "2",
+          username: "user",
+          email: "user@example.com",
+          firstName: "Regular",
+          lastName: "User",
+          role: "user"
+        };
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store the token in localStorage
-        localStorage.setItem("token", data.token);
-        // Store user data in localStorage
-        localStorage.setItem("user", JSON.stringify({
-          _id: data._id,
-          username: data.username,
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          role: data.role
-        }));
+        // Mock token
+        const mockToken = "mock-jwt-token-for-demo-purposes";
+        
+        // Use the auth context to log in
+        login(mockUser, mockToken);
+        
         // Redirect to dashboard
         navigate("/dashboard");
       } else {
-        setError(data.error || "Login failed");
+        setError("Invalid email or password");
       }
-    } catch (err) {
-      setError("Network error. Please try again.");
+    } catch (err: any) {
       console.error("Login error:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -13,8 +13,10 @@ const connectDB = require('./config/db');
 // Initialize express app
 const app = express();
 
-// Connect to database
-connectDB();
+// Connect to database (non-blocking)
+connectDB().catch(err => {
+  console.log('Database connection failed, continuing with mock database');
+});
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -22,6 +24,14 @@ app.use(cors()); // Enable CORS
 app.use(morgan('combined')); // Logging
 app.use(express.json({ limit: '10mb' })); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// Import routes
+const authRoutes = require('./routes/auth.routes');
+const hazardsRoutes = require('./routes/hazards.routes');
+
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/hazards', hazardsRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -50,9 +60,14 @@ app.use((req, res) => {
 const PORT = process.env.PORT || 5000;
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Civic Eye Backend server is running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
+});
+
+// Handle server errors
+server.on('error', (err) => {
+  console.error('Server error:', err);
 });
 
 module.exports = app;

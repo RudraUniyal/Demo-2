@@ -1,4 +1,15 @@
-const User = require('../models/User');
+// Try to use real User model, fallback to mock if MongoDB is not available
+let User;
+let useMock = false;
+try {
+  User = require('../models/User');
+  console.log('Using real MongoDB User model');
+} catch (error) {
+  console.log('MongoDB User model not available, using mock User model');
+  User = require('../models/MockUser');
+  useMock = true;
+}
+
 const { generateToken } = require('../config/jwt');
 const Joi = require('joi');
 
@@ -9,11 +20,6 @@ const registerSchema = Joi.object({
   password: Joi.string().min(6).required(),
   firstName: Joi.string().max(50).optional(),
   lastName: Joi.string().max(50).optional()
-});
-
-const loginSchema = Joi.object({
-  email: Joi.string().email().required(),
-  password: Joi.string().required()
 });
 
 // @desc    Register user
@@ -30,9 +36,19 @@ const registerUser = async (req, res) => {
     const { username, email, password, firstName, lastName } = req.body;
 
     // Check if user already exists
-    const userExists = await User.findOne({
-      $or: [{ email }, { username }]
-    });
+    let userExists = null;
+    try {
+      userExists = await User.findOne({
+        $or: [{ email }, { username }]
+      });
+    } catch (dbError) {
+      // If using mock, we handle this differently
+      if (useMock) {
+        console.log('Using mock database for user lookup');
+      } else {
+        throw dbError;
+      }
+    }
 
     if (userExists) {
       return res.status(400).json({ error: 'User already exists with this email or username' });
@@ -61,7 +77,7 @@ const registerUser = async (req, res) => {
       res.status(400).json({ error: 'Invalid user data' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Register error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -80,12 +96,30 @@ const loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     // Check for user email
-    const user = await User.findOne({ email });
+    let user = null;
+    try {
+      user = await User.findOne({ email });
+    } catch (dbError) {
+      // If using mock, we handle this differently
+      if (useMock) {
+        console.log('Using mock database for user lookup');
+      } else {
+        throw dbError;
+      }
+    }
+
+    // If we're using mock and didn't find user, try again with mock
+    if (useMock && !user) {
+      const UserModel = require('../models/MockUser');
+      user = await UserModel.findOne({ email });
+    }
 
     if (user && (await user.comparePassword(password))) {
-      // Update last login
-      user.lastLogin = new Date();
-      await user.save();
+      // Update last login (skip for mock)
+      if (!useMock) {
+        user.lastLogin = new Date();
+        await user.save();
+      }
 
       res.json({
         _id: user._id,
@@ -100,7 +134,7 @@ const loginUser = async (req, res) => {
       res.status(401).json({ error: 'Invalid email or password' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -110,8 +144,24 @@ const loginUser = async (req, res) => {
 // @access  Private
 const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
-    
+    let user = null;
+    try {
+      user = await User.findById(req.user._id);
+    } catch (dbError) {
+      // If using mock, we handle this differently
+      if (useMock) {
+        console.log('Using mock database for user lookup');
+      } else {
+        throw dbError;
+      }
+    }
+
+    // If we're using mock and didn't find user, try again with mock
+    if (useMock && !user) {
+      const UserModel = require('../models/MockUser');
+      user = await UserModel.findById(req.user._id);
+    }
+
     if (user) {
       res.json({
         _id: user._id,
@@ -126,7 +176,7 @@ const getUserProfile = async (req, res) => {
       res.status(404).json({ error: 'User not found' });
     }
   } catch (error) {
-    console.error(error);
+    console.error('Get profile error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

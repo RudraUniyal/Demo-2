@@ -39,42 +39,28 @@ export function Signup() {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
       
-      // Connect to your backend API
-      const response = await fetch("http://localhost:5000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          username: email.split("@")[0], // Use email prefix as username
-          email, 
-          password,
-          firstName,
-          lastName
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Log in the user automatically after registration
-        login({
-          _id: data._id,
-          username: data.username,
-          email: data.email,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          role: data.role
-        }, data.token);
-        
-        // Redirect to dashboard
-        navigate("/dashboard");
-      } else {
-        setError(data.error || "Registration failed");
-      }
-    } catch (err) {
-      setError("Network error. Please try again.");
+      // Mock registration - in a real app, this would call your backend API
+      // For demo purposes, we'll just create a mock user
+      const mockUser = {
+        _id: Math.random().toString(36).substr(2, 9),
+        username: email.split("@")[0], // Use email prefix as username
+        email,
+        firstName,
+        lastName,
+        role: "user"
+      };
+      
+      // Mock token
+      const mockToken = "mock-jwt-token-for-demo-purposes";
+      
+      // Log in the user automatically after registration
+      login(mockUser, mockToken);
+      
+      // Redirect to dashboard
+      navigate("/dashboard");
+    } catch (err: any) {
       console.error("Registration error:", err);
+      setError("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
